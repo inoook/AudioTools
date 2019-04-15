@@ -6,15 +6,27 @@ public class MicInput : MonoBehaviour
 {
     public AudioSource[] audioSrcs;
 
+    [SerializeField] string microphoneDeviceName = "";
+
 	// Use this for initialization
 	void Start ()
 	{
-		//if (audioSrc == null) {
-		//	audioSrc = this.gameObject.GetComponent<AudioSource> ();
-		//}
-		//audioSrc.outputAudioMixerGroup = audioMixer.outputAudioMixerGroup;
+        string[] devices = Microphone.devices;
+        foreach(var deviceName in devices) {
+            Debug.Log(deviceName);
+        }
+        string activeDeviceName = null;
+        if (!string.IsNullOrEmpty(microphoneDeviceName)) {
+            activeDeviceName = microphoneDeviceName;
+        }
+        Debug.Log(">> activeDeviceName: "+ activeDeviceName);
 
-		var sampleRate = AudioSettings.outputSampleRate;
+        //if (audioSrc == null) {
+        //	audioSrc = this.gameObject.GetComponent<AudioSource> ();
+        //}
+        //audioSrc.outputAudioMixerGroup = audioMixer.outputAudioMixerGroup;
+
+        var sampleRate = AudioSettings.outputSampleRate;
         //AudioSettings.outputSampleRate = 8000;
         //AudioConfiguration config = AudioSettings.GetConfiguration();
         //config.sampleRate = 8000;
@@ -22,7 +34,7 @@ public class MicInput : MonoBehaviour
         Debug.Log("sampleRate: "+sampleRate);
 
 		// Create a clip which is assigned to the default microphone.
-        AudioClip micClip = Microphone.Start(null, true, 1, sampleRate);
+        AudioClip micClip = Microphone.Start(activeDeviceName, true, 1, sampleRate);
         foreach(var audioSrc in audioSrcs){
             audioSrc.clip = micClip;
             audioSrc.loop = true;

@@ -346,6 +346,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mic_throughOut
       objectReference: {fileID: 0}
+    - target: {fileID: 3877107938813339262, guid: 33612cb632bbc48f589ca102d2a3215b,
+        type: 3}
+      propertyPath: microphoneDeviceName
+      value: HD Pro Webcam C920
+      objectReference: {fileID: 0}
     - target: {fileID: 3877107938813339263, guid: 33612cb632bbc48f589ca102d2a3215b,
         type: 3}
       propertyPath: m_LocalPosition.x
