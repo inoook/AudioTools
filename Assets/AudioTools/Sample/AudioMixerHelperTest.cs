@@ -19,7 +19,7 @@ public class AudioMixerHelperTest : MonoBehaviour {
     [SerializeField] AudioMixerHelper.SnapshotAndWeight[] snapshotAndWeights;
     [SerializeField] Rect drawRect = new Rect(10, 10, 200, 200);
 
-    [SerializeField] AudioMixer mixer;
+    [SerializeField] AudioMixer mixer = null;
 
     private void OnGUI()
 	{
@@ -29,26 +29,13 @@ public class AudioMixerHelperTest : MonoBehaviour {
             AudioMixerHelper.Change(mixer, snapshotAndWeights, 5);
         }
 
-        //if (GUILayout.Button("FadeTo1"))
-        //{
-        //    AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[0].snapshot, snapshotAndWeights[1].snapshot, 5);
-        //}
-        //if (GUILayout.Button("FadeTo2"))
-        //{
-        //    AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[1].snapshot, snapshotAndWeights[0].snapshot, 5);
-        //}
-        //if (GUILayout.Button("FadeTo3"))
-        //{
-        //    AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[1].snapshot, snapshotAndWeights[2].snapshot, 5);
-        //}
-
         if (GUILayout.Button("FadeTo1"))
         {
-            AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[1].snapshot, 5);
+            AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[0].snapshot, 5);
         }
         if (GUILayout.Button("FadeTo2"))
         {
-            AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[0].snapshot, 5);
+            AudioMixerHelper.FadeTo(mixer, snapshotAndWeights[1].snapshot, 5);
         }
         if (GUILayout.Button("FadeTo3"))
         {

@@ -18,29 +18,32 @@ public class MeshLine : MonoBehaviour {
 
 	void Awake()
 	{
-		INSTANCE = this;
+		if (INSTANCE == null)
+		{
+			INSTANCE = this;
+		}
 	}
 
 	// Use this for initialization
 	void Start () {
-		mf = this.GetComponent<MeshFilter> ();
-
-		mesh = new Mesh ();
-		mesh.name = "LineMesh";
-
-
-		mf.mesh = mesh;
-		
-		vertexList = new List<Vector3> ();
-		colorList = new List<Color> ();
+		Setup();
 	}
 
-	// test
-//	void Update()
-//	{
-//		MeshLine.DrawLine (Vector3.zero, new Vector3 (0, 1, 0), Color.green);
-//		MeshLine.DrawLine (new Vector3 (0, 1, 0), new Vector3 (0, 1, 1), Color.white);
-//	}
+	void Setup()
+    {
+		if(mf != null) { return; }
+
+		mf = this.GetComponent<MeshFilter>();
+
+		mesh = new Mesh();
+		mesh.name = "LineMesh";
+		mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+
+		mf.mesh = mesh;
+
+		vertexList = new List<Vector3>();
+		colorList = new List<Color>();
+	}
 
 	// Update is called once per frame
 	void LateUpdate () {
@@ -59,11 +62,9 @@ public class MeshLine : MonoBehaviour {
 
 		colorList.Add (color);
 		colorList.Add (color);
-
-
 	}
 
-	void _Render()
+	void _Render ()
 	{
 		mesh.Clear ();
 		mesh.MarkDynamic ();
@@ -87,39 +88,34 @@ public class MeshLine : MonoBehaviour {
 		colorList.Clear ();
 	}
 
-//	static Material lineMaterial;
-//	static void CreateLineMaterial() {
-//		if( !lineMaterial ) {
-//			lineMaterial = new Material(Shader.Find("Hidden/Lines/Colored Blended"));
-//			lineMaterial.hideFlags = HideFlags.HideAndDontSave;
-//			lineMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
-//		}
-//	}
-//
-//	void _Render__()
-//	{
-//		Debug.Log (vertexList.Count);
-//		CreateLineMaterial();
-//
-//		UnityEngine.GL.PushMatrix();
-//		lineMaterial.SetPass(0);
-//		UnityEngine.GL.LoadOrtho();
-//		UnityEngine.GL.Begin(UnityEngine.GL.LINES);
-//		for (int i = 0; i < vertexList.Count; i++) {
-//			UnityEngine.GL.Color (colorList[i]);
-//			UnityEngine.GL.Vertex (vertexList[i]);
-//		}
-//		UnityEngine.GL.End();
-//		UnityEngine.GL.PopMatrix();
-//
-//		vertexList.Clear ();
-//		colorList.Clear ();
-//	}
+    static void Create()
+	{
+		if (INSTANCE == null)
+		{
+			Debug.LogWarning("Create: MeshLine");
+			var gameObject = new GameObject("MeshLine");
+			var ml = gameObject.AddComponent<MeshLine>();
 
-	#region API
+			var mr = gameObject.GetComponent<MeshRenderer>();
+			mr.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
+
+			INSTANCE = ml;
+
+			INSTANCE.Setup();
+		}
+	}
+
+
+	#region draw
 	public static void DrawLine(Vector3 a, Vector3 b, Color color)
 	{
+		Create();
 		INSTANCE._DrawLine (a, b, color);
+	}
+	public static void DrawRay(Vector3 a, Vector3 b, Color color)
+	{
+		Create();
+		INSTANCE._DrawLine(a, a + b, color);
 	}
 	#endregion
 }

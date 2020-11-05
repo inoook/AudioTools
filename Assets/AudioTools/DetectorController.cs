@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class DetectorController : MonoBehaviour {
 
-    [SerializeField] Detector detector;
-    [SerializeField] AudioDelayPlay audioDelayPlay;
-    [SerializeField] RecordVoice recordVoice;
+    [SerializeField] Detector detector = null;
+    [SerializeField] AudioDataPlayer audioDataPlayer = null;
+    [SerializeField] AudioRecorder audioRecorder = null;
 
-    [SerializeField] MusicInput audioDelayMusicInput;
+    [SerializeField] AudioAnalyzer audioDelayAnalyser = null;
 
     [SerializeField] bool isDelayPlaying = false;
     
@@ -18,17 +18,14 @@ public class DetectorController : MonoBehaviour {
         detector.eventRecordAudioComplete += Detector_EventRecordAudioComplete;
         detector.eventRecordAudioTimeout += Detector_EventRecordAudioTimeout;
 
-        audioDelayPlay.eventAudioOnComplete += AudioDelayPlay_EventAudioOnComplete;
-
-        recordVoice.enableRecord = false;
-        recordVoice.StartMicrophone();
+        audioDataPlayer.eventAudioOnComplete += AudioDelayPlay_EventAudioOnComplete;
 	}
 	
 	// Update is called once per frame
 	void Update () {
         if(isDelayPlaying){
-            float volume = audioDelayMusicInput.GetVolume01();
-            float pitch = audioDelayMusicInput.GetPitch01();
+            float volume = audioDelayAnalyser.GetVolume();
+            float pitch = audioDelayAnalyser.GetPitchHertz();
             Debug.LogWarning(volume.ToString() + " / "+pitch.ToString());
         }
 	}
@@ -37,18 +34,17 @@ public class DetectorController : MonoBehaviour {
     {
         // 録音開始
         Debug.Log("start: " + startTime);
+        audioRecorder.StartRecord();
     }
 
     List<float[]> current_recData;
-    void Detector_EventRecordAudioComplete(List<float[]> recData, float duration)
+    void Detector_EventRecordAudioComplete(float duration)
     {
         // 録音完了
-        Debug.Log(recData.Count + " / duration: "+duration);
+        Debug.Log("duration: "+duration);
         //detector.StartReplay(recData);
         detector.StopDetect();
 
-        // save recData
-        current_recData = recData;
         // play
         PlayRecordAudio();
     }
@@ -57,8 +53,9 @@ public class DetectorController : MonoBehaviour {
     {
         // 再生
         // play
-        audioDelayPlay.SetRecordData(current_recData);
-        audioDelayPlay.StartPlay();
+        current_recData = audioRecorder.GetRecData();
+        audioDataPlayer.SetRecordData(current_recData);
+        audioDataPlayer.Play();
 
         isDelayPlaying = true;
     }
@@ -76,7 +73,7 @@ public class DetectorController : MonoBehaviour {
         isDelayPlaying = false;
     }
    
-#region API
+    #region public
     public void StartDetect()
     {
         Debug.Log("StartDetect");
@@ -87,7 +84,12 @@ public class DetectorController : MonoBehaviour {
         Debug.Log("StopDetect");
         detector.StopDetect();
     }
-#endregion
+    public void PlayRecData()
+    {
+        Debug.Log("PlayRecData");
+        audioDataPlayer.Play();
+    }
+    #endregion
 
     [SerializeField] Rect drawRect = new Rect(10,10,100,100);
 
@@ -97,7 +99,7 @@ public class DetectorController : MonoBehaviour {
         bool enableDetect = detector.IsEnableDetect();
         GUI.color = enableDetect ? Color.red : Color.white;
         GUILayout.Label("IsEnableDetect: " + enableDetect);
-        bool isRecording = detector.IsRecording();
+        bool isRecording = detector.IsDetected();
         GUI.color = isRecording ? Color.red : Color.white;
         GUILayout.Label("isRecording: " + isRecording);
         GUI.color = isDelayPlaying ? Color.red : Color.white;
@@ -108,6 +110,10 @@ public class DetectorController : MonoBehaviour {
         }
         if (GUILayout.Button("StopDetect")){
             StopDetect();
+        }
+        if (GUILayout.Button("PlayRecData"))
+        {
+            PlayRecData();
         }
         GUILayout.EndArea();
 	}

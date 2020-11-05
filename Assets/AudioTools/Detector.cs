@@ -13,20 +13,20 @@ public class Detector : MonoBehaviour {
     public delegate void RecordAudioStartHandler(float time);
     public event RecordAudioStartHandler eventRecordAudioStart;
 
-    public delegate void RecordAudioCompleteHandler(List<float[]> recData, float duration);
+    public delegate void RecordAudioCompleteHandler(float duration);
     public event RecordAudioCompleteHandler eventRecordAudioComplete;
 
     public delegate void RecordAudioTimeoutHandler();
     public event RecordAudioTimeoutHandler eventRecordAudioTimeout;
 
-	[SerializeField] MusicInput musicInput;
-	[SerializeField] float v;
+	[SerializeField] AudioAnalyzer audioAnalyzer = null;
+	[SerializeField] float currentVolume = 0;
     [Tooltip("サウンドの録音開始する閾値")]
-	[SerializeField] float vThreshold = 0.2f;
+	[SerializeField] float volumeThreshold = 0.2f;
 
-    [SerializeField] bool isStartRecord = false;
+    [SerializeField] bool isDetected = false;
 
-    [SerializeField] RecordVoice recordVoice;
+    //[SerializeField] AudioRecorder audioRecorder = null;
 
     [Tooltip("最大の録音時間")]
     [SerializeField] float recLimit = 10;
@@ -43,14 +43,14 @@ public class Detector : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         // 1秒間のcount数を取得するため
-		Invoke (((System.Action)StartRecord).Method.Name, 1.0f);
-        Invoke (((System.Action)Check).Method.Name, 2.0f);
+		//Invoke (((System.Action)StartRecord).Method.Name, 1.0f);
+  //      Invoke (((System.Action)Check).Method.Name, 2.0f);
 	}
 
 	void Check()
 	{
-		Debug.Log (recordVoice.debug_count);
-        StopRecord();
+		//Debug.Log (audioRecorder.debug_count);
+        //StopRecord();
 	}
 
 	// Update is called once per frame
@@ -59,18 +59,17 @@ public class Detector : MonoBehaviour {
             return; 
         }
 
-		v = musicInput.GetVolume01 ();
-		if (!isStartRecord) {
-			if (v > vThreshold) {
-				Debug.Log ("Start");
-				isStartRecord = true;
+		currentVolume = audioAnalyzer.GetVolume ();
+		if (!isDetected) {
+			if (currentVolume > volumeThreshold) {
+				Debug.Log ("Start: " +currentVolume);
+				isDetected = true;
 				startTime = Time.time;
                 debug_duration = 0;
 
                 if(eventRecordAudioStart != null){
                     eventRecordAudioStart(startTime);
                 }
-//				StartRecord ();
 			}
 
             // timeOut --
@@ -80,53 +79,46 @@ public class Detector : MonoBehaviour {
                 if (eventRecordAudioTimeout != null){
                     eventRecordAudioTimeout();
                 }
-                //
-                StopDetect();
+                isDetected = false;
             }
 		}
-		if (isStartRecord) {
+
+		if (isDetected) {
             float duration = Time.time - startTime;
             debug_duration = duration;
-            if (duration > recMinTime && (v < vThreshold * 0.5f || duration > recLimit) ) {
-				isStartRecord = false;
+            if (duration > recMinTime && (currentVolume < volumeThreshold * 0.5f || duration > recLimit) ) {
+                // EndRecord
+                // 録音時間が最低時間以上で閾値以下または録音時間上限の時は終了
+                isDetected = false;
 				
 				Debug.Log ("End: " + duration);
-//				EndRecord ();
-				PlayRecordData (duration);
+                if (eventRecordAudioComplete != null)
+                {
+                    eventRecordAudioComplete(duration + 1);
+                }
 			}
 		}
 	}
 
     [SerializeField] public float debug_duration;
 
-	void StartRecord()
-	{
-		recordVoice.ClearRecordData ();
-		recordVoice.StartRecord ();
-	}
+	//void StopRecord()
+	//{
+	//	audioRecorder.StopRecord ();
+	//}
 
-	void StopRecord()
-	{
-		recordVoice.StopRecord ();
-	}
+    //[SerializeField] public float delayTime = 1.0f;
 
-    [SerializeField] public float delayTime = 1.0f;
+	//void PlayRecordData(float time)
+	//{
+ //       List<float[]> recordAudioData = audioRecorder.GetRecData();
 
-	void PlayRecordData(float time)
-	{
-		int range = ((int)time+1) * 43;
-        int dataEnd = recordVoice.recordAudioData.Count;
-        int dataCount = Mathf.Min(dataEnd, range);
-        int startIndex = dataEnd - dataCount;
-		List<float[]> recData = recordVoice.recordAudioData.GetRange(startIndex, dataCount);
-
-        if(eventRecordAudioComplete != null){
-            eventRecordAudioComplete(recData, time+1);
-        }
-
-		//delayPlay0.SetRecordData (recData);
-		//delayPlay0.StartPlay ();
-	}
+ //       int range = ((int)time+1) * 43;
+ //       int dataEnd = recordAudioData.Count;
+ //       int dataCount = Mathf.Min(dataEnd, range);
+ //       int startIndex = dataEnd - dataCount;
+	//	List<float[]> recData = recordAudioData.GetRange(startIndex, dataCount);
+	//}
 
     //public void StartReplay(List<float[]> recData)
     //{
@@ -139,37 +131,21 @@ public class Detector : MonoBehaviour {
         detectStartTime = Time.time;
 
         enableDetect = true;
-        StartRecord();
     }
 
     public void StopDetect()
     {
         enableDetect = false;
-        StopRecord();
+        //StopRecord();
     }
 
-    public bool IsRecording()
+    public bool IsDetected()
     {
-        return isStartRecord;
+        return isDetected;
     }
 
     public bool IsEnableDetect()
     {
         return enableDetect;
     }
-
-	//[SerializeField] Rect drawRect;
-
-	//void OnGUI()
-	//{
-	//	GUILayout.BeginArea (drawRect);
-	//	GUILayout.Label (this.gameObject.name);
-	//	if (GUILayout.Button ("RePlay")) {
-			
-	//		delayPlay0.StartPlay ();
-	//		Invoke ("DelayPlay", 1);
-	//	}
-
-	//	GUILayout.EndArea ();
-	//}
 }
